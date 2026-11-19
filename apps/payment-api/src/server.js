@@ -30,7 +30,7 @@ function configuredOrigins() {
   return allowed;
 }
 
-function isAllowedOrigin(origin, req) {
+function isOriginAllowed(origin, req) {
   if (!origin) return true;
   const host = req.headers.host;
   if (host && (origin === `https://${host}` || origin === `http://${host}`)) {
