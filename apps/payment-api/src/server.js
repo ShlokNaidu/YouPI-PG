@@ -282,6 +282,43 @@ export class HttpServer {
         }
       }
 
+      // Forward checkout portal routes & assets to local checkout-portal service (port 7000)
+      const isCheckoutPortalPath = pathname.startsWith('/checkout') ||
+        pathname.startsWith('/css/') ||
+        pathname.startsWith('/js/') ||
+        pathname.startsWith('/icons/') ||
+        pathname.startsWith('/sdk/') ||
+        pathname === '/youpi.js' ||
+        pathname.startsWith('/stand');
+
+      if (isCheckoutPortalPath) {
+        const checkoutPort = Number(process.env.CHECKOUT_PORTAL_PORT || 7000);
+        const proxyReq = http.request({
+          hostname: '127.0.0.1',
+          port: checkoutPort,
+          path: req.url,
+          method: req.method,
+          headers: {
+            ...req.headers,
+            host: `127.0.0.1:${checkoutPort}`,
+            'x-forwarded-host': req.headers.host || '',
+            'x-forwarded-proto': req.headers['x-forwarded-proto'] || 'https'
+          }
+        }, (proxyRes) => {
+          res.writeHead(proxyRes.statusCode, proxyRes.headers);
+          proxyRes.pipe(res);
+        });
+
+        proxyReq.on('error', (err) => {
+          if (!res.headersSent) {
+            HttpServer.json(res, 502, { error: 'Checkout portal unavailable', details: err.message });
+          }
+        });
+
+        req.pipe(proxyReq);
+        return;
+      }
+
       // Not found
       HttpServer.json(res, 404, { error: `Route not found: ${method} ${pathname}` });
     });

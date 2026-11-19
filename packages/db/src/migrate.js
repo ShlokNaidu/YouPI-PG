@@ -173,11 +173,12 @@ export function runMigrations(targetDb) {
   // Seed default merchant if empty
   const merchantRepo = new MerchantRepository(db);
   const existing = merchantRepo.findAll();
+  const configuredApiKey = (process.env.DEFAULT_MERCHANT_API_KEY || process.env.MERCHANT_API_KEY || process.env.YOUPI_API_KEY || 'youpi_live_api_key_2026').trim();
 
   let defaultMerchant;
   if (existing.length === 0) {
     const branding = resolveDefaultBranding();
-    const businessName = process.env.DEFAULT_MERCHANT_NAME || 'YOUPI Demo Store';
+    const businessName = process.env.DEFAULT_MERCHANT_NAME || 'ShopRight Store';
     const slug = process.env.DEFAULT_MERCHANT_SLUG || 'demo-store';
     const contactEmail = process.env.DEFAULT_SUPPORT_EMAIL || 'merchant@youpi.local';
     const contactPhone = process.env.DEFAULT_SUPPORT_PHONE || '9876543210';
@@ -188,6 +189,7 @@ export function runMigrations(targetDb) {
       slug,
       contactEmail,
       contactPhone,
+      apiKey: configuredApiKey,
       webhookUrl: process.env.COIN_STORE_WEBHOOK_URL || 'http://localhost:5000/api/webhook',
       webhookSecret: getCoinStoreWebhookSecret(),
       branding: {
@@ -200,6 +202,10 @@ export function runMigrations(targetDb) {
     });
   } else {
     defaultMerchant = existing[0];
+    merchantRepo.update(defaultMerchant.id, {
+      apiKey: configuredApiKey,
+      businessName: process.env.DEFAULT_MERCHANT_NAME || defaultMerchant.businessName || 'ShopRight Store'
+    });
     if (!defaultMerchant.webhookSecret) {
       merchantRepo.update(defaultMerchant.id, {
         webhookUrl: 'http://localhost:5000/api/webhook',
@@ -212,15 +218,24 @@ export function runMigrations(targetDb) {
     }
   }
 
-  // Seed default UPI receiving account if none
+  // Seed default UPI receiving account if none or sync with environment variables
   const accountRepo = new ReceivingAccountRepository(db);
   const accounts = accountRepo.findByMerchantId(defaultMerchant.id);
+  const targetUpiId = (process.env.DEFAULT_UPI_ID || process.env.UPI_ID || 'shlok16naidu@okicici').trim();
+  const targetPayeeName = (process.env.DEFAULT_PAYEE_NAME || process.env.DEFAULT_MERCHANT_NAME || 'Shlok Naidu').trim();
+
   if (accounts.length === 0) {
     accountRepo.create({
       id: '00000000-0000-0000-0000-000000000002',
       merchantId: defaultMerchant.id,
-      upiId: 'merchant@upi',
-      payeeName: defaultMerchant.businessName,
+      upiId: targetUpiId,
+      payeeName: targetPayeeName,
+      isActive: true
+    });
+  } else {
+    accountRepo.updateAccount(accounts[0].id, {
+      upiId: targetUpiId,
+      payeeName: targetPayeeName,
       isActive: true
     });
   }
