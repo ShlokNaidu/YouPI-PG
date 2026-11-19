@@ -50,10 +50,10 @@ export class ObserverPollerService {
       || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
     this.smsBaseUrl = options.smsBaseUrl
       || process.env.SMS_OBSERVER_URL
-      || (publicOrigin ? `${publicOrigin.replace(/\/+$/, '')}/internal/sms` : `http://localhost:${this.smsPort}`);
+      || `http://127.0.0.1:${this.smsPort}`;
     this.gmailBaseUrl = options.gmailBaseUrl
       || process.env.GMAIL_OBSERVER_URL
-      || (publicOrigin ? `${publicOrigin.replace(/\/+$/, '')}/internal/gmail` : `http://localhost:${this.gmailPort}`);
+      || `http://127.0.0.1:${this.gmailPort}`;
     this.observerToken = options.observerToken || null;
 
     // Lifecycle and concurrency control state
