@@ -77,7 +77,6 @@ COPY --from=builder --chown=youpi:youpi /app ./
 
 # Setup data persistence directory for native SQLite
 RUN mkdir -p /app/data && chown -R youpi:youpi /app/data
-VOLUME ["/app/data"]
 
 # Expose all 7 services
 EXPOSE 5000 6001 6002 6003 6100 7000 8090
