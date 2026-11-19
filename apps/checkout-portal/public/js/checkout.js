@@ -263,14 +263,11 @@
         try {
           const refUrl = new URL(document.referrer);
           if (refUrl.host !== window.location.host) {
-            return `${refUrl.origin}/`;
+            return refUrl.href;
           }
         } catch (e) { }
       }
-      if (window.location.port === '7000' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        return 'http://localhost:5000/';
-      }
-      return '/';
+      return 'http://localhost:5173/';
     }
 
     // Retry / Close on Expired or Failed session
@@ -2023,7 +2020,7 @@
         };
       }
 
-      // 3. Pre-Gateway Customer Authentication Gate (Preserves identity up to 1 week)
+      // 3. Pre-Gateway Customer Authentication Gate (Disabled: immediate direct UPI QR display)
       if (data.customer) {
         activeCustomer = data.customer;
       } else if (!activeCustomer) {
@@ -2033,18 +2030,8 @@
           activeToken = preserved.token || activeToken;
         }
       }
-      const hasCustomer = Boolean(data.customer || activeCustomer);
-
-      if (!hasCustomer) {
-        setGatewayAuthMode(true);
-        const stepMob = document.getElementById('authStepMobile');
-        const isAlreadyOnMobile = stepMob && !stepMob.hidden;
-        if (!currentAuthStep || (currentAuthStep === 'mobile' && !isAlreadyOnMobile)) {
-          goToAuthStep('mobile');
-        }
-        renderSavedAccountsUI();
-        return;
-      }
+      // Allow instant seamless checkout without forcing mobile/OTP login
+      const hasCustomer = true;
 
       // Authenticated Customer
       if (activeCustomer) {

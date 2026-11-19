@@ -279,6 +279,16 @@ export class HttpServer {
         return;
       }
 
+      if (pathname === '/' || pathname === '') {
+        HttpServer.json(res, 200, {
+          status: 'UP',
+          gateway: 'YOUPI PG V2',
+          message: 'UPI QR Payment Gateway is online.',
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+
       try {
         for (const guard of this.guards) {
           if (await guard(req, res, pathname, parsedUrl)) return;
