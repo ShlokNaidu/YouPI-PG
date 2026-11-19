@@ -26,9 +26,10 @@ try {
 // opt out EXPLICITLY with YOUPI_ALLOW_LOCALHOST_MODE=true together with
 // YOUPI_MODE=localhost, so the operator has asked for it rather than it being a silent
 // fallback.
-const allowLocalhostMode = String(process.env.YOUPI_ALLOW_LOCALHOST_MODE || '').trim().toLowerCase() === 'true';
-const requestedMode = String(process.env.YOUPI_MODE || '').trim().toLowerCase();
-const runInLocalhostMode = allowLocalhostMode && requestedMode === 'localhost';
+const hasCloudflare = Boolean(process.env.CLOUDFLARE_DOMAIN);
+const allowLocalhostMode = String(process.env.YOUPI_ALLOW_LOCALHOST_MODE || (!hasCloudflare ? 'true' : '')).trim().toLowerCase() === 'true';
+const requestedMode = String(process.env.YOUPI_MODE || (!hasCloudflare ? 'localhost' : 'production')).trim().toLowerCase();
+const runInLocalhostMode = allowLocalhostMode && (requestedMode === 'localhost' || !hasCloudflare);
 
 if (runInLocalhostMode) {
   console.log('\n====================================================');
