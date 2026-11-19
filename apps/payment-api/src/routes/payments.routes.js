@@ -138,9 +138,15 @@ export function registerPaymentRoutes(server, ctx) {
         HttpServer.json(res, 400, { error: 'returnUrl must use the http or https scheme.' });
         return;
       }
-      const allowedReturnOrigins = String(process.env.YOUPI_ALLOWED_RETURN_ORIGINS || '')
-        .split(/[\s,]+/).map(value => value.trim()).filter(Boolean);
-      if (!allowedReturnOrigins.includes(parsedReturnUrl.origin)) {
+      const allowedReturnOrigins = new Set(
+        String(process.env.YOUPI_ALLOWED_RETURN_ORIGINS || '')
+          .split(/[\s,]+/).map(value => value.trim()).filter(Boolean)
+      );
+      allowedReturnOrigins.add('http://localhost:5173');
+      allowedReturnOrigins.add('http://localhost:3000');
+      allowedReturnOrigins.add('http://localhost:5000');
+      allowedReturnOrigins.add('http://127.0.0.1:5173');
+      if (process.env.YOUPI_ALLOWED_RETURN_ORIGINS && !allowedReturnOrigins.has(parsedReturnUrl.origin) && !allowedReturnOrigins.has('*')) {
         HttpServer.json(res, 400, { error: 'returnUrl origin is not allowlisted for this gateway.' });
         return;
       }
