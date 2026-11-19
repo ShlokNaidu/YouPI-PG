@@ -352,7 +352,7 @@ export function registerPaymentRoutes(server, ctx) {
     // Only physical counter payments (CASH_COUNTER, CARD_COUNTER) start as ACTIVE (they do not use UPI slots).
     // The only exception for UPI auto-activation is explicit developer test suite flag: body.autoActivate === true.
     const shouldActivateNow = true;
-    const initialStatus = PaymentStatus.ACTIVE;
+    const initialStatus = isCounterPayment ? PaymentStatus.ACTIVE : PaymentStatus.INITIATED;
 
     const sessionMetadata = {
       ...(body.metadata || {}),

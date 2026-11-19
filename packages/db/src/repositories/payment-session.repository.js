@@ -136,7 +136,7 @@ export class PaymentSessionRepository {
         // Enforce the transition graph: a terminal or PROCESSING session must never be
         // revived to ACTIVE by a concurrent queue tick.
         const currentStatus = this.findById(sessionId)?.status;
-        if (currentStatus && !isValidTransition(currentStatus, PaymentStatus.ACTIVE)) {
+        if (currentStatus && currentStatus !== PaymentStatus.ACTIVE && !isValidTransition(currentStatus, PaymentStatus.ACTIVE)) {
           throw new Error(`Illegal payment state transition: cannot move from '${currentStatus}' to 'ACTIVE'.`);
         }
 
