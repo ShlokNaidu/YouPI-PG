@@ -78,6 +78,9 @@ COPY --from=builder --chown=youpi:youpi /app ./
 # Setup data persistence directory for native SQLite
 RUN mkdir -p /app/data && chown -R youpi:youpi /app/data
 
+# Ensure services listen on 0.0.0.0 inside container for PaaS/Railway networking
+ENV YOUPI_BIND_HOST=0.0.0.0
+
 # Expose all 7 services
 EXPOSE 5000 6001 6002 6003 6100 7000 8090
 
