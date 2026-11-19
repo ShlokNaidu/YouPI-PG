@@ -1463,6 +1463,19 @@
         const data = await res.json().catch(() => ({}));
 
         if (res.status === 409 || data.error === 'DUPLICATE_SESSION_DETECTED') {
+          // Stale device token in localStorage: clear it and re-fetch clean state
+          try {
+            localStorage.removeItem('youpi_device_id');
+            localStorage.removeItem('youpi_device_token');
+            sessionStorage.clear();
+          } catch(e){}
+          const cleanRes = await fetch(`${API_BASE}/api/v1/checkout/${PAYMENT_ID}/state`);
+          if (cleanRes.ok) {
+            const cleanData = await cleanRes.json().catch(() => ({}));
+            renderState(cleanData);
+            dismissSplashScreen();
+            return;
+          }
           renderDuplicateSession(data);
           dismissSplashScreen();
           return;

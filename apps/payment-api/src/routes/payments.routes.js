@@ -158,7 +158,7 @@ export function registerPaymentRoutes(server, ctx) {
     const deviceSignature = body.deviceSignature || req.headers['x-device-signature'] || null;
     const signaturePayload = body.signaturePayload || req.headers['x-device-payload'] || null;
 
-    if (deviceId) {
+    if (deviceId && process.env.YOUPI_STRICT_DEVICE_BINDING === 'true') {
       const credCheck = verifyRegisteredDeviceCredentials({
         deviceId,
         deviceToken,

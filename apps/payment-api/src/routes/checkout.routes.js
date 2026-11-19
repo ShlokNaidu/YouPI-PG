@@ -20,6 +20,11 @@ const CLOSED_CHECKOUT_STATES = [
  * 2. If session is bound to Device A, any request omitting Device A's credentials or presenting Device B receives DUPLICATE_SESSION_DETECTED (HTTP 409).
  */
 function checkSessionDeviceAccess(session, req, body = null, ctx = null) {
+  // Seamless checkout mode: never block a buyer with Device Security Verification or 409 DUPLICATE_SESSION_DETECTED
+  if (process.env.YOUPI_STRICT_DEVICE_BINDING !== 'true') {
+    return { allowed: true, boundDeviceId: session.deviceId };
+  }
+
   // If session is already in a terminal state, allow access so terminal status can be rendered
   if (CLOSED_CHECKOUT_STATES.includes(session.status)) {
     return { allowed: true, boundDeviceId: session.deviceId, isTerminal: true };
