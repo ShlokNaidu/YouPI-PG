@@ -2043,7 +2043,7 @@
           const descEl = document.getElementById('failedDescriptionText');
           if (descEl) {
             descEl.textContent = isExpired
-              ? 'The 5-minute active payment window elapsed before verification was completed. For security, please return to the store and initiate a new order.'
+              ? 'The payment window elapsed before payment was received. Click below to generate a fresh payment session or return to the store.'
               : 'No matching UPI bank confirmation was detected during the verification window.';
           }
           const btnAction = document.getElementById('btnFailedAction');
