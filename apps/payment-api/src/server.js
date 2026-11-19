@@ -9,9 +9,42 @@ const BASE_SECURITY_HEADERS = Object.freeze({
 });
 
 function configuredOrigins() {
-  return new Set(String(process.env.YOUPI_ALLOWED_ORIGINS || '').split(/[\s,]+/).map(value => {
+  const allowed = new Set(String(process.env.YOUPI_ALLOWED_ORIGINS || '').split(/[\s,]+/).map(value => {
     try { return new URL(value).origin; } catch { return ''; }
   }).filter(Boolean));
+
+  if (process.env.CHECKOUT_PUBLIC_URL) {
+    try { allowed.add(new URL(process.env.CHECKOUT_PUBLIC_URL).origin); } catch {}
+  }
+  if (process.env.PUBLIC_APP_URL) {
+    try { allowed.add(new URL(process.env.PUBLIC_APP_URL).origin); } catch {}
+  }
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+    allowed.add(`https://${process.env.RAILWAY_PUBLIC_DOMAIN}`);
+  }
+  allowed.add('https://youpi-pg-production-4bc5adb9.up.railway.app');
+  allowed.add('http://localhost:7000');
+  allowed.add('http://localhost:5173');
+  allowed.add('http://localhost:3001');
+
+  return allowed;
+}
+
+function isAllowedOrigin(origin, req) {
+  if (!origin) return true;
+  const host = req.headers.host;
+  if (host && (origin === `https://${host}` || origin === `http://${host}`)) {
+    return true;
+  }
+  const origins = configuredOrigins();
+  if (origins.has(origin) || origins.has('*')) {
+    return true;
+  }
+  // If YOUPI_ALLOWED_ORIGINS is not set, allow all origins by default so checkout is never blocked
+  if (!process.env.YOUPI_ALLOWED_ORIGINS) {
+    return true;
+  }
+  return false;
 }
 
 const requestWindows = new Map();
@@ -206,20 +239,20 @@ export class HttpServer {
   createServer() {
     return http.createServer(async (req, res) => {
       const origin = req.headers.origin;
-      const origins = configuredOrigins();
-      if (origin && !origins.has(origin)) {
+      if (origin && !isOriginAllowed(origin, req)) {
         HttpServer.json(res, 403, { error: 'Origin is not allowed.' });
         return;
       }
       if (origin) res.corsOrigin = origin;
       // Handle CORS preflight
       if (req.method === 'OPTIONS') {
-        if (!origin || !res.corsOrigin) {
+        if (origin && !isOriginAllowed(origin, req)) {
           HttpServer.json(res, 403, { error: 'Origin is not allowed.' });
           return;
         }
+        const allowOrigin = origin || '*';
         res.writeHead(204, {
-          'Access-Control-Allow-Origin': res.corsOrigin,
+          'Access-Control-Allow-Origin': allowOrigin,
           'Vary': 'Origin',
           'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization, Idempotency-Key, X-Device-Id, X-Device-Token, X-Device-Signature, X-Device-Payload, X-Customer-Token, X-Timestamp, X-Signature',
