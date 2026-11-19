@@ -1468,6 +1468,26 @@
           return;
         }
 
+        if (res.status === 404 || data.error?.includes('not found')) {
+          const authView = document.getElementById('preGatewayAuthView');
+          if (authView) authView.hidden = true;
+          const payView = document.getElementById('paymentGatewayInterface');
+          if (payView) {
+            payView.hidden = false;
+            payView.style.removeProperty('display');
+            payView.innerHTML = `
+              <div style="padding: 48px 24px; text-align: center; max-width: 480px; margin: 0 auto;">
+                <div style="width: 56px; height: 56px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 28px;">⚠️</div>
+                <h2 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 8px;">Session Expired or Not Found</h2>
+                <p style="font-size: 0.875rem; color: #64748b; line-height: 1.5; margin-bottom: 24px;">This payment session is no longer active. If you refreshed after an update or the link expired, please return to the store to generate a fresh QR code.</p>
+                <a href="${getStoreReturnUrl()}" style="display: inline-block; padding: 10px 20px; border-radius: 12px; background: #059669; color: #fff; font-weight: 700; text-decoration: none; font-size: 0.875rem;">Return to Store</a>
+              </div>
+            `;
+          }
+          dismissSplashScreen();
+          return;
+        }
+
         if (!res.ok) {
           dismissSplashScreen();
           return;
